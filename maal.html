@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mål innkjørselen</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,600;112,800;125,900&family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+/* Layout: kart til venstre og liste over målte områder til høyre på PC; på mobil kommer kartet først og listen under. */
+:root {
+  --snow: #f3f6f9; --card: #ffffff; --ink: #14212e; --muted: #586a7c; --line: #d5dee7; --ice: #e3ecf4;
+  --signal: #e8650f; --signal-ink: #ffffff; --signal-soft: #fde6d4;
+  --display: "Archivo", "Arial Narrow", Arial, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --radius: 10px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --snow: #0e1720; --card: #16222e; --ink: #e8eff6; --muted: #9db0c2; --line: #2a3a4a; --ice: #1b2a38; --signal: #ff8a3d; --signal-ink: #1a0d03; --signal-soft: #3a2414; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --snow: #0e1720; --card: #16222e; --ink: #e8eff6; --muted: #9db0c2; --line: #2a3a4a; --ice: #1b2a38; --signal: #ff8a3d; --signal-ink: #1a0d03; --signal-soft: #3a2414; color-scheme: dark; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { background: var(--snow); color: var(--ink); font-family: var(--body); font-size: 1.0625rem; line-height: 1.5; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); font-stretch: 112%; line-height: 1.1; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(1.8rem, 5vw, 2.6rem); font-weight: 900; font-stretch: 125%; }
+h2 { font-size: 1.15rem; font-weight: 800; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 3px solid var(--signal); outline-offset: 2px; }
+.eyebrow { font-family: var(--display); font-weight: 600; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--signal); }
+
+header.top { border-bottom: 1px solid var(--line); background: var(--card); }
+header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 12px; flex-wrap: wrap; }
+.brand { font-family: var(--display); font-weight: 900; font-stretch: 125%; font-size: 1.1rem; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px; }
+.brand .mark { width: 28px; height: 28px; border-radius: 6px; background: repeating-linear-gradient(-45deg, var(--signal) 0 6px, var(--ink) 6px 12px); }
+.back { color: inherit; font-weight: 600; }
+
+.intro { padding-block: 28px 20px; display: grid; gap: 10px; }
+.intro p { max-width: 62ch; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font: 700 1rem var(--body); padding: 12px 18px; border-radius: var(--radius); border: 2px solid transparent; cursor: pointer; text-decoration: none; }
+.btn-signal { background: var(--signal); color: var(--signal-ink); }
+.btn-ghost { border-color: var(--ink); color: var(--ink); background: transparent; }
+.btn-small { padding: 8px 12px; font-size: .92rem; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.search { position: relative; display: flex; gap: 8px; max-width: 640px; }
+.search input { flex: 1; min-width: 0; font: inherit; color: var(--ink); background: var(--card); border: 1.5px solid var(--line); border-radius: 8px; padding: 12px; }
+.search input:focus { border-color: var(--signal); outline: none; box-shadow: 0 0 0 3px var(--signal-soft); }
+.hits { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 1000; list-style: none; margin: 0; padding: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 10px 24px -12px rgba(0,0,0,.35); }
+.hits button { width: 100%; text-align: left; font: inherit; color: var(--ink); background: none; border: 0; padding: 10px; border-radius: 6px; cursor: pointer; }
+.hits button:hover, .hits button:focus-visible { background: var(--ice); }
+.msg { font-size: .92rem; color: var(--muted); }
+
+.work { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; padding-block: 16px 48px; align-items: start; }
+.mapbox { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: var(--ice); min-width: 0; }
+#kart { height: min(70vh, 560px); min-height: 360px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px; background: var(--card); border-top: 1px solid var(--line); }
+.toolbar select { font: inherit; color: var(--ink); background: var(--snow); border: 1.5px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.hint-bar { background: var(--ink); color: var(--snow); padding: 8px 12px; font-size: .95rem; font-weight: 600; text-align: center; }
+
+aside.panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 16px; min-width: 0; }
+.areas { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.areas li { display: grid; grid-template-columns: 14px 1fr auto auto; gap: 10px; align-items: center; padding: 10px 12px; background: var(--snow); border-radius: 8px; }
+.swatch { width: 14px; height: 14px; border-radius: 3px; }
+.areas .m2 { font-weight: 700; }
+.areas button { font: inherit; font-size: .85rem; color: var(--muted); background: none; border: 0; cursor: pointer; text-decoration: underline; padding: 4px; }
+.empty { font-size: .95rem; color: var(--muted); padding: 12px; border: 1.5px dashed var(--line); border-radius: 8px; }
+.total { border-top: 2px dashed var(--line); padding-top: 14px; display: grid; gap: 2px; }
+.total-big { font-family: var(--display); font-weight: 900; font-stretch: 125%; font-size: 2.4rem; line-height: 1; }
+.total-big small { font-size: 1rem; font-weight: 600; font-stretch: 100%; color: var(--muted); }
+details.manual { font-size: .95rem; }
+details.manual summary { cursor: pointer; font-weight: 600; }
+.manual-row { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 6px; margin-top: 10px; align-items: end; }
+.manual-row label { display: grid; gap: 2px; font-size: .8rem; color: var(--muted); }
+.manual-row input, .manual-row select { font: inherit; width: 100%; min-width: 0; color: var(--ink); background: var(--snow); border: 1.5px solid var(--line); border-radius: 6px; padding: 8px; }
+
+/* Nummerert punkt på kartet */
+.pt { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 3px solid var(--signal); box-shadow: 0 0 0 1px rgba(0,0,0,.4); }
+.leaflet-container { font-family: var(--body); }
+.area-label { background: rgba(20,33,46,.85); color: #fff; border: 0; border-radius: 6px; font-weight: 700; padding: 2px 8px; box-shadow: none; }
+.area-label::before { display: none; }
+
+@media (max-width: 860px) { .work { grid-template-columns: 1fr; } #kart { height: 58vh; } }
+@media (max-width: 420px) { .manual-row { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html"><span class="mark" aria-hidden="true"></span><span data-firmanavn>Østfold Måk og Salt</span></a>
+    <a class="back" href="index.html#pris">Tilbake til prisen</a>
+  </div>
+</header>
+
+<main>
+  <section class="wrap intro">
+    <p class="eyebrow">Mål på kartet</p>
+    <h1>Hvor stort område skal måkes?</h1>
+    <p class="muted">Søk opp adressen din. Trykk deretter på hjørnene rundt innkjørselen på flyfotoet. Legg gjerne til gangvei, trapp eller terrasse også.</p>
+    <form class="search" id="sok-skjema" autocomplete="off">
+      <input type="text" id="sok" placeholder="Skriv adressen din, f.eks. Storgata 1 Fredrikstad" aria-label="Adresse">
+      <button class="btn btn-signal" type="submit">Finn</button>
+      <ul class="hits" id="treff" hidden></ul>
+    </form>
+    <p class="msg" id="sok-melding" aria-live="polite"></p>
+  </section>
+
+  <section class="wrap work">
+    <div class="mapbox">
+      <div id="kart" role="application" aria-label="Kart for å tegne område"></div>
+      <div class="hint-bar" id="hint">Søk opp adressen for å starte</div>
+      <div class="toolbar">
+        <label for="omradetype" class="muted" style="font-size:.9rem">Område:</label>
+        <select id="omradetype">
+          <option>Innkjørsel</option>
+          <option>Gangvei til døra</option>
+          <option>Terrasse</option>
+          <option>Trapp</option>
+          <option>Parkeringsplass</option>
+          <option>Annet</option>
+        </select>
+        <button class="btn btn-signal btn-small" id="start" type="button">Tegn område</button>
+        <button class="btn btn-ghost btn-small" id="angre" type="button" hidden>Angre punkt</button>
+        <button class="btn btn-signal btn-small" id="ferdig" type="button" hidden>Ferdig</button>
+        <button class="btn btn-ghost btn-small" id="avbryt" type="button" hidden>Avbryt</button>
+      </div>
+    </div>
+
+    <aside class="panel" aria-labelledby="panel-tittel">
+      <h2 id="panel-tittel">Dine områder</h2>
+      <ul class="areas" id="liste"></ul>
+      <p class="empty" id="tom">Ingen områder ennå. Velg type, trykk «Tegn område» og trykk på hjørnene i flyfotoet.</p>
+
+      <details class="manual" id="manuell">
+        <summary>Kan du ikke bruke kartet? Skriv inn mål</summary>
+        <div class="manual-row">
+          <label>Område
+            <select id="m-type"><option>Innkjørsel</option><option>Gangvei til døra</option><option>Terrasse</option><option>Trapp</option><option>Annet</option></select>
+          </label>
+          <label>Lengde (m)<input id="m-lengde" type="text" inputmode="decimal" placeholder="0"></label>
+          <label>Bredde (m)<input id="m-bredde" type="text" inputmode="decimal" placeholder="0"></label>
+          <button class="btn btn-ghost btn-small" id="m-legg" type="button">Legg til</button>
+        </div>
+      </details>
+
+      <div class="total">
+        <span class="muted">Totalt areal</span>
+        <div class="total-big num"><span id="sum">0</span> <small>m²</small></div>
+        <p class="msg">Målet på kartet er et anslag. Vi kontrollerer det før vi gir endelig pris.</p>
+      </div>
+      <a class="btn btn-signal" id="bruk" href="index.html#pris" aria-disabled="true">Se pris for dette arealet</a>
+    </aside>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const FIRMANAVN = "Østfold Måk og Salt";
+document.querySelectorAll("[data-firmanavn]").forEach(el => el.textContent = FIRMANAVN);
+
+const FARGER = { "Innkjørsel": "#e8650f", "Gangvei til døra": "#2f80d1", "Terrasse": "#8a5cd6", "Trapp": "#1d9a6c", "Parkeringsplass": "#d1a12f", "Annet": "#7b8a99" };
+const $ = id => document.getElementById(id);
+const kr = n => n.toLocaleString("nb-NO");
+
+/* ---------- Areal fra kartpunkter (lokal projeksjon, nøyaktig for små flater) ---------- */
+function arealM2(punkter) {
+  if (punkter.length < 3) return 0;
+  const R = 6371008.8, lat0 = punkter.reduce((s, p) => s + p.lat, 0) / punkter.length * Math.PI / 180;
+  const xy = punkter.map(p => [p.lng * Math.PI / 180 * R * Math.cos(lat0), p.lat * Math.PI / 180 * R]);
+  let a = 0;
+  for (let i = 0; i < xy.length; i++) { const [x1, y1] = xy[i], [x2, y2] = xy[(i + 1) % xy.length]; a += x1 * y2 - x2 * y1; }
+  return Math.abs(a) / 2;
+}
+
+/* ---------- Kart ---------- */
+let kart = null;
+const omrader = [];   // { id, type, m2, lag, kilde: "kart" | "manuelt" }
+let tegner = null;    // { punkter: [], markorer: [], linje }
+
+if (window.L) {
+  kart = L.map("kart", { zoomControl: true }).setView([59.28, 11.11], 11); // Østfold
+  // Flyfoto fra Kartverket (Norge i bilder). Faller tilbake til Esri hvis det ikke laster.
+  const nib = L.tileLayer.wms("https://wms.geonorge.no/skwms1/wms.nib", {
+    layers: "ortofoto", format: "image/jpeg", maxZoom: 21, attribution: "Flyfoto © Norge i bilder / Kartverket"
+  });
+  const esri = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+    maxZoom: 20, maxNativeZoom: 19, attribution: "Flyfoto © Esri"
+  });
+  const topo = L.tileLayer("https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/{z}/{y}/{x}.png", {
+    maxZoom: 20, maxNativeZoom: 18, attribution: "Kart © Kartverket"
+  });
+  nib.addTo(kart);
+  let feil = 0;
+  nib.on("tileerror", () => { if (++feil === 4 && kart.hasLayer(nib)) { kart.removeLayer(nib); esri.addTo(kart); } });
+  L.control.layers({ "Flyfoto (Kartverket)": nib, "Flyfoto (Esri)": esri, "Kart": topo }, null, { position: "topright" }).addTo(kart);
+  kart.on("click", e => { if (tegner) leggTilPunkt(e.latlng); });
+} else {
+  $("kart").innerHTML = '<p style="padding:20px">Kartet kunne ikke lastes. Bruk «Skriv inn mål» til høyre.</p>';
+  $("manuell").open = true;
+}
+
+function hint(t) { $("hint").textContent = t; $("hint").hidden = !t; }
+
+/* ---------- Adressesøk (Kartverkets åpne adresse-API, ingen nøkkel) ---------- */
+async function sok(tekst) {
+  const url = "https://ws.geonorge.no/adresser/v1/sok?treffPerSide=6&utkoordsys=4258&sok=" + encodeURIComponent(tekst);
+  const svar = await fetch(url);
+  if (!svar.ok) throw new Error("Søket svarte ikke");
+  const data = await svar.json();
+  return (data.adresser || []).map(a => ({
+    tekst: `${a.adressetekst}, ${a.postnummer} ${a.poststed}`,
+    lat: a.representasjonspunkt.lat, lon: a.representasjonspunkt.lon
+  }));
+}
+function velgAdresse(a) {
+  $("treff").hidden = true;
+  $("sok").value = a.tekst;
+  $("sok-melding").textContent = "";
+  try { localStorage.setItem("maal_adresse", a.tekst); } catch (_) {}
+  if (kart) { kart.setView([a.lat, a.lon], 20); hint("Velg type område og trykk «Tegn område»"); }
+}
+$("sok-skjema").addEventListener("submit", async e => {
+  e.preventDefault();
+  const t = $("sok").value.trim();
+  if (t.length < 3) { $("sok-melding").textContent = "Skriv inn gate og nummer, gjerne med sted."; return; }
+  $("sok-melding").textContent = "Søker …";
+  try {
+    const treff = await sok(t);
+    if (!treff.length) { $("sok-melding").textContent = "Fant ingen adresse. Sjekk stavemåten, eller prøv uten husnummer."; return; }
+    if (treff.length === 1) return velgAdresse(treff[0]);
+    $("sok-melding").textContent = "Velg riktig adresse:";
+    const ul = $("treff"); ul.innerHTML = "";
+    treff.forEach(a => {
+      const li = document.createElement("li"), b = document.createElement("button");
+      b.type = "button"; b.textContent = a.tekst; b.onclick = () => velgAdresse(a);
+      li.appendChild(b); ul.appendChild(li);
+    });
+    ul.hidden = false;
+  } catch (_) {
+    $("sok-melding").textContent = "Adressesøket virker ikke akkurat nå. Flytt kartet til huset ditt selv, eller skriv inn mål.";
+  }
+});
+
+/* ---------- Tegning ---------- */
+function visKnapper(tegnerNa) {
+  $("start").hidden = tegnerNa; $("omradetype").disabled = tegnerNa;
+  $("angre").hidden = $("ferdig").hidden = $("avbryt").hidden = !tegnerNa;
+  oppdaterFerdig();
+}
+function oppdaterFerdig() {
+  if (!tegner) return;
+  const n = tegner.punkter.length;
+  $("ferdig").disabled = n < 3; $("angre").disabled = n === 0;
+  hint(n < 3 ? `Trykk på hjørne ${n + 1}` : `${kr(Math.round(arealM2(tegner.punkter)))} m². Trykk flere hjørner eller «Ferdig»`);
+}
+function tegnLinje() {
+  const farge = FARGER[tegner.type];
+  if (tegner.linje) kart.removeLayer(tegner.linje);
+  tegner.linje = (tegner.punkter.length >= 3 ? L.polygon : L.polyline)(tegner.punkter, { color: farge, weight: 3, fillOpacity: .25, dashArray: "6 6" }).addTo(kart);
+}
+function leggTilPunkt(ll) {
+  tegner.punkter.push(ll);
+  tegner.markorer.push(L.marker(ll, { icon: L.divIcon({ className: "", html: '<div class="pt"></div>', iconSize: [14, 14] }), interactive: false }).addTo(kart));
+  tegnLinje(); oppdaterFerdig();
+}
+function ryddTegner() {
+  if (!tegner) return;
+  tegner.markorer.forEach(m => kart.removeLayer(m));
+  if (tegner.linje) kart.removeLayer(tegner.linje);
+  tegner = null; visKnapper(false);
+  setTimeout(() => kart.doubleClickZoom.enable(), 400);
+}
+$("start").onclick = () => {
+  if (!kart) return;
+  tegner = { type: $("omradetype").value, punkter: [], markorer: [], linje: null };
+  kart.doubleClickZoom.disable();
+  visKnapper(true);
+};
+$("angre").onclick = () => {
+  if (!tegner || !tegner.punkter.length) return;
+  tegner.punkter.pop(); kart.removeLayer(tegner.markorer.pop()); tegnLinje(); oppdaterFerdig();
+};
+$("avbryt").onclick = () => { ryddTegner(); hint("Velg type område og trykk «Tegn område»"); };
+$("ferdig").onclick = () => {
+  const { type, punkter } = tegner, m2 = arealM2(punkter);
+  const lag = L.polygon(punkter, { color: FARGER[type], weight: 3, fillOpacity: .3 }).addTo(kart)
+    .bindTooltip(`${type}: ${kr(Math.round(m2))} m²`, { permanent: true, direction: "center", className: "area-label" });
+  ryddTegner();
+  leggTilOmrade({ type, m2, lag, kilde: "kart" });
+  hint("Legg til flere områder, eller trykk «Se pris»");
+};
+
+/* ---------- Manuell måling ---------- */
+$("m-legg").onclick = () => {
+  const l = parseFloat($("m-lengde").value.replace(",", ".")), b = parseFloat($("m-bredde").value.replace(",", "."));
+  if (!(l > 0 && b > 0)) { $("m-lengde").focus(); return; }
+  leggTilOmrade({ type: $("m-type").value, m2: l * b, lag: null, kilde: "manuelt" });
+  $("m-lengde").value = $("m-bredde").value = "";
+};
+
+/* ---------- Liste og total ---------- */
+let nesteId = 1;
+function leggTilOmrade(o) { o.id = nesteId++; omrader.push(o); visListe(); }
+function fjern(id) {
+  const i = omrader.findIndex(o => o.id === id);
+  if (i < 0) return;
+  if (omrader[i].lag && kart) kart.removeLayer(omrader[i].lag);
+  omrader.splice(i, 1); visListe();
+}
+function visListe() {
+  const ul = $("liste"); ul.innerHTML = "";
+  omrader.forEach(o => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="swatch" style="background:${FARGER[o.type]}"></span><span></span><span class="m2 num"></span><button type="button">Fjern</button>`;
+    li.children[1].textContent = o.type + (o.kilde === "manuelt" ? " (skrevet inn)" : "");
+    li.children[2].textContent = kr(Math.round(o.m2)) + " m²";
+    li.children[3].onclick = () => fjern(o.id);
+    ul.appendChild(li);
+  });
+  $("tom").hidden = omrader.length > 0;
+  const sum = Math.round(omrader.reduce((s, o) => s + o.m2, 0));
+  $("sum").textContent = kr(sum);
+  // Sendes til prissiden. Kalkulatoren går til 300 m², større områder vises som 300+.
+  const fordeling = omrader.map(o => ({ type: o.type, m2: Math.round(o.m2), kilde: o.kilde }));
+  try { localStorage.setItem("maal_omrader", JSON.stringify(fordeling)); } catch (_) {}
+  const bruk = $("bruk");
+  bruk.href = sum > 0 ? `index.html?areal=${sum}#pris` : "index.html#pris";
+  bruk.setAttribute("aria-disabled", sum > 0 ? "false" : "true");
+}
+visListe();
+</script>
+</body>
+</html>

@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="utf-8">
+<title>Østfold Måk og Salt</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Snømåking av innkjørsel og vei til døra i Østfold. Rask utrykning, enkeltoppdrag og sesongavtaler.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,600;112,800;125,900&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+html, body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+/* Layout: smal enkeltkolonne på mobil; på PC står budskap og priskalkulator side om side i toppen, resten i rolige bånd under. */
+:root {
+  --snow: #f3f6f9;          /* bakgrunn, snøhvit med blått stikk */
+  --card: #ffffff;
+  --ink: #14212e;           /* tekst, kald blekk-blå */
+  --muted: #586a7c;
+  --line: #d5dee7;
+  --ice: #e3ecf4;           /* rolig flate */
+  --signal: #e8650f;        /* brøytebil-oransje, aksent */
+  --signal-ink: #ffffff;
+  --signal-soft: #fde6d4;
+  --ok: #1d7a4c;
+  --display: "Archivo", "Arial Narrow", Arial, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --snow: #0e1720; --card: #16222e; --ink: #e8eff6; --muted: #9db0c2; --line: #2a3a4a;
+    --ice: #1b2a38; --signal: #ff8a3d; --signal-ink: #1a0d03; --signal-soft: #3a2414; --ok: #5fcf96;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --snow: #0e1720; --card: #16222e; --ink: #e8eff6; --muted: #9db0c2; --line: #2a3a4a;
+  --ice: #1b2a38; --signal: #ff8a3d; --signal-ink: #1a0d03; --signal-soft: #3a2414; --ok: #5fcf96;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--snow); color: var(--ink);
+  font-family: var(--body); font-size: 1.0625rem; line-height: 1.55;
+}
+.wrap {
+  max-width: 1080px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+h1, h2, h3 { font-family: var(--display); font-stretch: 112%; line-height: 1.08; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); font-weight: 900; font-stretch: 125%; letter-spacing: -0.01em; }
+h2 { font-size: clamp(1.6rem, 3.6vw, 2.2rem); font-weight: 800; }
+h3 { font-size: 1.2rem; font-weight: 800; }
+p { margin: 0; }
+a { color: inherit; }
+.eyebrow { font-family: var(--display); font-weight: 600; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--signal); }
+.muted { color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 3px solid var(--signal); outline-offset: 2px; }
+
+/* Topplinje */
+header.top { border-bottom: 1px solid var(--line); background: var(--card); }
+header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 12px; flex-wrap: wrap; }
+.brand { font-family: var(--display); font-weight: 900; font-stretch: 125%; font-size: 1.15rem; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+.brand .mark { width: 30px; height: 30px; border-radius: 6px; background: repeating-linear-gradient(-45deg, var(--signal) 0 6px, var(--ink) 6px 12px); flex: none; }
+.phone { font-weight: 700; text-decoration: none; white-space: nowrap; }
+
+/* Knapper */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font: 700 1rem var(--body); padding: 14px 20px; border-radius: var(--radius); border: 2px solid transparent; cursor: pointer; text-decoration: none; }
+.btn-signal { background: var(--signal); color: var(--signal-ink); }
+.btn-signal:hover { filter: brightness(1.06); }
+.btn-ghost { border-color: var(--ink); color: var(--ink); background: transparent; }
+
+/* Topp */
+.hero { padding-block: 40px 56px; }
+.hero .wrap { display: grid; grid-template-columns: 1.05fr 1fr; gap: 40px; align-items: start; }
+.hero-text { display: grid; gap: 20px; padding-top: 8px; min-width: 0; }
+.hero-text .lead { font-size: 1.2rem; max-width: 34ch; }
+.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 0; margin: 0; list-style: none; font-weight: 600; }
+.facts li { display: flex; align-items: center; gap: 8px; }
+.facts li::before { content: ""; width: 8px; height: 8px; background: var(--signal); border-radius: 2px; }
+
+/* Priskalkulator */
+.calc { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 24px; display: grid; gap: 20px; box-shadow: 0 12px 32px -18px rgba(20,33,46,.35); min-width: 0; }
+.calc-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.tag { font-size: .78rem; font-weight: 700; letter-spacing: .04em; padding: 3px 9px; border-radius: 999px; background: var(--signal-soft); color: var(--ink); }
+.seg { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 5px; background: var(--ice); border-radius: var(--radius); }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label { text-align: center; padding: 10px 8px; border-radius: 7px; font-weight: 700; cursor: pointer; line-height: 1.2; }
+.seg label small { display: block; font-weight: 400; font-size: .82rem; color: var(--muted); }
+.seg input:checked + label { background: var(--card); box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+.seg input:focus-visible + label { outline: 3px solid var(--signal); }
+.area-row { display: flex; justify-content: space-between; align-items: baseline; }
+.area-val { font-family: var(--display); font-weight: 800; font-size: 1.5rem; }
+input[type="range"] { width: 100%; accent-color: var(--signal); height: 32px; margin: 0; }
+.scale { display: flex; justify-content: space-between; font-size: .85rem; color: var(--muted); }
+.lots { display: flex; flex-wrap: wrap; gap: 4px; min-height: 22px; align-items: center; }
+.lot { width: 14px; height: 20px; border: 2px solid var(--muted); border-radius: 3px; opacity: .8; }
+.lot.part { border-style: dashed; opacity: .5; }
+.lots-note { font-size: .9rem; color: var(--muted); }
+.maal-link { font-weight: 700; color: var(--signal); font-size: .95rem; }
+.addon { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: var(--radius); cursor: pointer; }
+.addon:has(input:checked) { border-color: var(--signal); background: var(--signal-soft); }
+.addon input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--signal); flex: none; }
+.addon span { display: grid; line-height: 1.3; }
+.addon small { color: var(--muted); font-size: .9rem; }
+.price { border-top: 2px dashed var(--line); padding-top: 18px; display: grid; gap: 4px; }
+.price-big { font-family: var(--display); font-weight: 900; font-stretch: 125%; font-size: clamp(2.3rem, 7vw, 3rem); line-height: 1; }
+.price-big .unit { font-size: 1.1rem; font-weight: 600; font-stretch: 100%; color: var(--muted); }
+.price-break { font-size: .95rem; color: var(--muted); }
+
+/* Bånd */
+section.band { padding-block: 56px; }
+section.band.alt { background: var(--card); border-block: 1px solid var(--line); }
+.band-head { display: grid; gap: 8px; margin-bottom: 28px; max-width: 60ch; }
+.steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; counter-reset: s; }
+.steps li { display: grid; gap: 8px; align-content: start; counter-increment: s; }
+.steps li::before { content: counter(s); font-family: var(--display); font-weight: 900; font-size: 1.1rem; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: var(--signal); color: var(--signal-ink); }
+.offers { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.offer { border: 1px solid var(--line); border-radius: 14px; padding: 24px; display: grid; gap: 12px; align-content: start; background: var(--snow); }
+.offer ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+.coop { margin-top: 20px; padding: 18px 20px; border-radius: 14px; background: var(--ice); display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.coop p { max-width: 60ch; }
+
+/* Skjema */
+.contact { display: grid; grid-template-columns: 1fr 1.3fr; gap: 40px; align-items: start; }
+.contact-side { display: grid; gap: 16px; min-width: 0; }
+form.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 24px; display: grid; gap: 16px; min-width: 0; }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field label, .legend { font-weight: 700; font-size: .95rem; }
+.field .hint { font-size: .85rem; color: var(--muted); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+input[type="text"], input[type="tel"], input[type="date"], select, textarea {
+  font: inherit; color: var(--ink); background: var(--snow); border: 1.5px solid var(--line); border-radius: 8px; padding: 11px 12px; width: 100%;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--signal); outline: none; box-shadow: 0 0 0 3px var(--signal-soft); }
+.invalid { border-color: #c4361b !important; }
+.err { color: #c4361b; font-size: .9rem; font-weight: 600; }
+.summary-chip { font-size: .95rem; background: var(--ice); padding: 10px 12px; border-radius: 8px; }
+.privacy { font-size: .85rem; color: var(--muted); }
+.done { display: grid; gap: 12px; }
+.done h3 { color: var(--ok); }
+details.dev { font-size: .85rem; border: 1px dashed var(--line); border-radius: 8px; padding: 10px 12px; }
+details.dev pre { overflow-x: auto; margin: 8px 0 0; font-size: .8rem; }
+
+footer { padding-block: 32px; color: var(--muted); font-size: .9rem; }
+footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+@media (max-width: 820px) {
+  .hero .wrap, .contact, .offers { grid-template-columns: 1fr; }
+  .steps { grid-template-columns: 1fr; }
+  .hero { padding-block: 28px 40px; }
+}
+@media (max-width: 460px) {
+  .two { grid-template-columns: 1fr; }
+  .calc, form.card { padding: 18px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .price-big .val { transition: color .2s; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top"><span class="mark" aria-hidden="true"></span><span data-firmanavn>Østfold Måk og Salt</span></a>
+    <a class="phone num" data-telefon-lenke href="tel:+4700000000">Ring <span data-telefon>000 00 000</span></a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-text">
+        <p class="eyebrow">Snømåking i Østfold</p>
+        <h1>Snøen kom. Vi kommer også.</h1>
+        <p class="lead">Vi måker innkjørselen og veien helt fram til døra. Ta kontakt, så rykker vi ut så fort vi kan.</p>
+        <ul class="facts">
+          <li>Rask utrykning</li>
+          <li>Enkeltoppdrag eller fast avtale</li>
+          <li>Pris før vi starter</li>
+        </ul>
+        <div class="hero-actions">
+          <a class="btn btn-signal" href="#bestill">Bestill måking</a>
+          <a class="btn btn-ghost" href="#tjenester">Se hva vi tilbyr</a>
+        </div>
+      </div>
+
+      <div class="calc" id="pris" aria-labelledby="calc-title">
+        <div class="calc-head">
+          <h3 id="calc-title">Regn ut prisen</h3>
+          <span class="tag" id="price-tag">Foreløpige priser</span>
+        </div>
+
+        <div class="seg" role="radiogroup" aria-label="Type oppdrag">
+          <input type="radio" name="type" id="t-enkelt" value="enkeltoppdrag" checked>
+          <label for="t-enkelt">Enkeltoppdrag<small>Én gang, når du trenger det</small></label>
+          <input type="radio" name="type" id="t-sesong" value="sesongavtale">
+          <label for="t-sesong">Sesongavtale<small>Vi kommer hver gang det snør</small></label>
+        </div>
+
+        <div class="field">
+          <div class="area-row">
+            <label for="areal">Areal som skal måkes</label>
+            <span class="area-val num"><span id="areal-ut">60</span> m²</span>
+          </div>
+          <input type="range" id="areal" min="20" max="300" step="5" value="60" aria-describedby="lots-note">
+          <div class="scale num"><span>20 m²</span><span>300 m²</span></div>
+          <div class="lots" id="lots" aria-hidden="true"></div>
+          <p class="lots-note" id="lots-note">Tilsvarer ca. <span id="biler">5</span> parkeringsplasser. En vanlig innkjørsel for én bil er 30–50 m².</p>
+          <a class="maal-link" href="maal.html">Usikker? Mål innkjørselen på kartet</a>
+        </div>
+
+        <label class="addon" for="stroing">
+          <input type="checkbox" id="stroing">
+          <span><strong>Strøing mot is og glatte</strong><small id="stroing-pris">+150 kr per gang</small></span>
+        </label>
+
+        <div class="price" aria-live="polite">
+          <span class="muted" id="price-label">Pris per gang</span>
+          <div class="price-big num"><span class="val" id="pris-ut">660</span> <span class="unit">kr</span></div>
+          <p class="price-break num" id="pris-detalj">Oppmøte 300 kr + 6 kr per m²</p>
+        </div>
+
+        <a class="btn btn-signal" href="#bestill" id="calc-cta">Bestill med denne prisen</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="band alt" id="slik">
+    <div class="wrap">
+      <div class="band-head">
+        <p class="eyebrow">Slik fungerer det</p>
+        <h2>Fra snøfall til fri innkjørsel</h2>
+      </div>
+      <ol class="steps">
+        <li><h3>Du tar kontakt</h3><p class="muted">Send skjemaet under, ring oss eller skriv på sosiale medier. Fortell hvor og når.</p></li>
+        <li><h3>Vi bekrefter</h3><p class="muted">Vi ringer deg tilbake, bekrefter prisen og sier når vi er der.</p></li>
+        <li><h3>Vi måker</h3><p class="muted">Innkjørselen og gangveien til døra blir måkt, så du kommer deg ut og inn.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="band" id="tjenester">
+    <div class="wrap">
+      <div class="band-head">
+        <p class="eyebrow">Tjenester</p>
+        <h2>Velg det som passer deg</h2>
+      </div>
+      <div class="offers">
+        <article class="offer">
+          <h3>Enkeltoppdrag</h3>
+          <p class="muted">For deg som vil ha hjelp akkurat nå, eller bare av og til.</p>
+          <ul>
+            <li>Du betaler per gang</li>
+            <li>Vi kommer så fort som mulig etter at du tar kontakt</li>
+            <li>Ingen binding</li>
+            <li>Strøing kan legges til</li>
+          </ul>
+        </article>
+        <article class="offer">
+          <h3>Sesongavtale</h3>
+          <p class="muted">For deg som ikke vil tenke på snøen i det hele tatt.</p>
+          <ul>
+            <li>Fast pris for hele vinteren, med <span data-inkludert>30</span> utrykninger inkludert</li>
+            <li>Vi rykker ut av oss selv når det har snødd</li>
+            <li>Du får beskjed når det er meldt snø</li>
+          </ul>
+        </article>
+      </div>
+      <div class="coop">
+        <p><strong>Borettslag og sameier er også velkomne.</strong> Vi gir et eget tilbud etter befaring.</p>
+        <a class="btn btn-ghost" href="#bestill" id="coop-cta">Be om tilbud</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="band alt" id="bestill">
+    <div class="wrap contact">
+      <div class="contact-side">
+        <p class="eyebrow">Bestill måking</p>
+        <h2>Fortell oss hvor og når</h2>
+        <p class="muted">Vi ringer deg tilbake så fort vi kan. Har du det travelt, ring oss direkte på <strong class="num" data-telefon>000 00 000</strong>.</p>
+      </div>
+
+      <form class="card" id="skjema" novalidate>
+        <div id="skjema-felt" style="display:grid; gap:16px;">
+          <div class="field">
+            <span class="legend">Hvem er du?</span>
+            <div class="seg" role="radiogroup" aria-label="Kundetype">
+              <input type="radio" name="kundetype" id="k-privat" value="privat" checked>
+              <label for="k-privat">Privatperson</label>
+              <input type="radio" name="kundetype" id="k-borettslag" value="borettslag">
+              <label for="k-borettslag">Borettslag / sameie</label>
+            </div>
+          </div>
+          <div class="two">
+            <div class="field">
+              <label for="navn">Navn</label>
+              <input type="text" id="navn" name="navn" autocomplete="name" required>
+            </div>
+            <div class="field">
+              <label for="telefon">Telefon</label>
+              <input type="tel" id="telefon" name="telefon" autocomplete="tel" inputmode="tel" placeholder="8 siffer" required>
+            </div>
+          </div>
+          <div class="field">
+            <label for="adresse">Adresse</label>
+            <input type="text" id="adresse" name="adresse" autocomplete="street-address" placeholder="Gate, nummer og sted" required>
+          </div>
+          <div class="two">
+            <div class="field">
+              <label for="naar">Når trenger du oss?</label>
+              <select id="naar" name="naar">
+                <option value="snarest">Så fort som mulig</option>
+                <option value="i_dag">I løpet av dagen</option>
+                <option value="i_morgen">I morgen</option>
+                <option value="dato">Velg dato</option>
+                <option value="neste_snofall">Neste gang det snør</option>
+              </select>
+            </div>
+            <div class="field" id="dato-felt" hidden>
+              <label for="dato">Dato</label>
+              <input type="date" id="dato" name="dato">
+            </div>
+          </div>
+          <div class="field">
+            <span class="legend">Ditt prisoverslag</span>
+            <p class="summary-chip num" id="oppsummering">Enkeltoppdrag, 60 m², ca. 660 kr</p>
+            <span class="hint">Endre areal og type i kalkulatoren øverst.</span>
+          </div>
+          <div class="field">
+            <label for="melding">Noe vi bør vite? <span class="muted">(valgfritt)</span></label>
+            <textarea id="melding" name="melding" rows="3" placeholder="F.eks. bratt innkjørsel, port, hvor bilen står"></textarea>
+          </div>
+          <p class="err" id="feil" hidden>Fyll inn navn, telefon og adresse, så vi vet hvem vi skal ringe og hvor vi skal.</p>
+          <button class="btn btn-signal" type="submit">Send forespørsel</button>
+          <p class="privacy">Vi bruker opplysningene bare til å kontakte deg om oppdraget.</p>
+        </div>
+
+        <div class="done" id="takk" hidden>
+          <h3>Takk, vi har fått forespørselen din!</h3>
+          <p>Vi ringer deg på <strong class="num" id="takk-tlf"></strong> så snart vi kan for å bekrefte tid og pris.</p>
+          <details class="dev">
+            <summary>Prototype: slik lagres forespørselen</summary>
+            <pre id="json-ut"></pre>
+          </details>
+          <button class="btn btn-ghost" type="button" id="ny">Send en ny forespørsel</button>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 <span data-firmanavn>Østfold Måk og Salt</span></span>
+    <span>Snømåking i Østfold · <span class="num" data-telefon>000 00 000</span></span>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   INNSTILLINGER – endre her
+   Prisene er foreløpige til Emil har bestemt seg.
+   ============================================================ */
+const FIRMA = {
+  navn: "Østfold Måk og Salt",   // arbeidsnavn, bytt når navnet er bestemt
+  telefon: "000 00 000",           // vises på siden
+  telefonLenke: "+4700000000"
+};
+/* PRISMODELL: prisene regnes ut fra timelønn og tidsbruk.
+   Endre tallene under, så endres alle priser på siden. */
+const PRISER = {
+  versjon: "modell-2026-11-13",    // endre når tallene endres, lagres med hver forespørsel
+  eksempelpriser: true,            // sett til false når du er fornøyd med prisene
+
+  personer: 2,                     // hvor mange som er med på hver jobb
+  timelonnPerPerson: 400,          // kr per time hver av dere skal sitte igjen med
+  kostnadPaslag: 0.30,             // drivstoff, utstyr, slitasje, forsikring (30 %)
+  mva: 0.25,                       // sett til 0 hvis firmaet ikke er mva-registrert
+
+  minutterPerBesok: 15,            // kjøring, rigging og pakking per oppdrag
+  m2PerMinutt: 4,                  // hvor fort dere måker sammen (m² per minutt)
+
+  enkeltoppdrag: { paslag: 0.25, minstepris: 500 },   // påslag for rask utrykning uten avtale
+  sesongavtale: {
+    forventedeUtrykninger: 20,     // et normalt år i Østfold, anslag
+    rabatt: 0.15,                  // rabatt fordi dere får forutsigbar inntekt
+    inkludertInntil: 30,           // flere utrykninger enn dette faktureres per gang
+    maaneder: "november–mars"
+  },
+  stroing: { perGang: 150, forventedeSesong: 12 }     // strøing med salt eller sand
+};
+const M2_PER_BILPLASS = 12.5;
+
+/* ---------- Prisberegning ---------- */
+const avrund = (n, til) => Math.round(n / til) * til;
+const medMva = n => n * (1 + PRISER.mva);
+function kostnadPerBesok(m2) {
+  const timer = (PRISER.minutterPerBesok + m2 / PRISER.m2PerMinutt) / 60;
+  return timer * PRISER.personer * PRISER.timelonnPerPerson * (1 + PRISER.kostnadPaslag);
+}
+function beregnPris(type, m2, stroing) {
+  const k = kostnadPerBesok(m2), s = PRISER.sesongavtale;
+  if (type === "enkeltoppdrag") {
+    const grunn = Math.max(PRISER.enkeltoppdrag.minstepris, avrund(medMva(k * (1 + PRISER.enkeltoppdrag.paslag)), 10));
+    const tillegg = stroing ? PRISER.stroing.perGang : 0;
+    return { total: grunn + tillegg, grunn, stroing: tillegg, ekstraPerGang: null };
+  }
+  const grunn = avrund(medMva(k * s.forventedeUtrykninger * (1 - s.rabatt)), 100);
+  const tillegg = stroing ? avrund(PRISER.stroing.perGang * PRISER.stroing.forventedeSesong, 100) : 0;
+  return { total: grunn + tillegg, grunn, stroing: tillegg, ekstraPerGang: avrund(medMva(k), 10) };
+}
+const kr = n => n.toLocaleString("nb-NO");
+
+const $ = id => document.getElementById(id);
+const areal = $("areal");
+
+function valgtType() { return document.querySelector('input[name="type"]:checked').value; }
+
+function oppdater() {
+  const m2 = Number(areal.value), type = valgtType(), stroing = $("stroing").checked;
+  const p = beregnPris(type, m2, stroing), s = PRISER.sesongavtale;
+  $("areal-ut").textContent = m2;
+  $("pris-ut").textContent = kr(p.total);
+  const plasser = m2 / M2_PER_BILPLASS;
+  $("biler").textContent = plasser < 1 ? "1" : kr(Math.round(plasser));
+  const hele = Math.floor(plasser), lots = $("lots");
+  lots.innerHTML = "";
+  for (let i = 0; i < hele; i++) lots.insertAdjacentHTML("beforeend", '<span class="lot"></span>');
+  if (plasser - hele >= 0.3) lots.insertAdjacentHTML("beforeend", '<span class="lot part"></span>');
+  const stroTekst = stroing ? `, strøing ${kr(p.stroing)} kr` : "";
+  if (type === "enkeltoppdrag") {
+    $("price-label").textContent = "Pris per gang";
+    $("pris-detalj").textContent = `Måking ${kr(p.grunn)} kr${stroTekst}. Inkl. mva.`;
+    $("stroing-pris").textContent = `+${kr(PRISER.stroing.perGang)} kr per gang`;
+  } else {
+    $("price-label").textContent = `Pris for hele sesongen (${s.maaneder})`;
+    $("pris-detalj").textContent = `Måking ${kr(p.grunn)} kr${stroTekst}. Inntil ${s.inkludertInntil} utrykninger, deretter ${kr(p.ekstraPerGang)} kr per gang. Inkl. mva.`;
+    $("stroing-pris").textContent = `+${kr(avrund(PRISER.stroing.perGang * PRISER.stroing.forventedeSesong, 100))} kr for sesongen, vi strør ved behov`;
+  }
+  $("price-tag").hidden = !PRISER.eksempelpriser;
+  $("oppsummering").textContent =
+    `${type === "enkeltoppdrag" ? "Enkeltoppdrag" : "Sesongavtale"}, ${m2} m²${stroing ? ", med strøing" : ""}, ca. ${kr(p.total)} kr${type === "sesongavtale" ? " for sesongen" : ""}`;
+}
+$("stroing").addEventListener("change", oppdater);
+
+/* ---------- Areal fra målesiden (maal.html) ---------- */
+let maalteOmrader = null;
+try {
+  const fraMaal = Number(new URLSearchParams(location.search).get("areal"));
+  if (fraMaal > 0) {
+    areal.value = Math.min(Number(areal.max), Math.max(Number(areal.min), Math.round(fraMaal / 5) * 5));
+    maalteOmrader = JSON.parse(localStorage.getItem("maal_omrader") || "null");
+    const adr = localStorage.getItem("maal_adresse");
+    if (adr) $("adresse").value = adr;
+  }
+} catch (_) {}
+document.querySelectorAll("[data-inkludert]").forEach(el => el.textContent = PRISER.sesongavtale.inkludertInntil);
+areal.addEventListener("input", oppdater);
+document.querySelectorAll('input[name="type"]').forEach(r => r.addEventListener("change", oppdater));
+
+/* ---------- Firmanavn og telefon fra innstillingene ---------- */
+document.querySelectorAll("[data-firmanavn]").forEach(el => el.textContent = FIRMA.navn);
+document.querySelectorAll("[data-telefon]").forEach(el => el.textContent = FIRMA.telefon);
+document.querySelectorAll("[data-telefon-lenke]").forEach(el => el.href = "tel:" + FIRMA.telefonLenke);
+
+/* ---------- Skjema ---------- */
+$("naar").addEventListener("change", e => { $("dato-felt").hidden = e.target.value !== "dato"; });
+$("coop-cta").addEventListener("click", () => { $("k-borettslag").checked = true; });
+
+/* Felles format for en forespørsel. Brukes senere av kundesvar-agenten,
+   snøvarslingen og dashbordet. Se foresporsel-format.md. */
+function lagForesporsel() {
+  const type = valgtType(), m2 = Number(areal.value), naar = $("naar").value;
+  return {
+    id: "F-" + Date.now().toString(36).toUpperCase(),
+    opprettet: new Date().toISOString(),
+    kilde: "nettside",
+    status: "ny",
+    kunde: {
+      type: document.querySelector('input[name="kundetype"]:checked').value,
+      navn: $("navn").value.trim(),
+      telefon: $("telefon").value.replace(/\s+/g, ""),
+      adresse: $("adresse").value.trim()
+    },
+    oppdrag: {
+      type,
+      areal_m2: m2,
+      stroing: $("stroing").checked,
+      omrader: maalteOmrader,
+      naar: { valg: naar, dato: naar === "dato" ? ($("dato").value || null) : null },
+      melding: $("melding").value.trim() || null
+    },
+    prisoverslag: {
+      belop_kr: beregnPris(type, m2, $("stroing").checked).total,
+      herav_stroing_kr: beregnPris(type, m2, $("stroing").checked).stroing,
+      enhet: type === "enkeltoppdrag" ? "per_gang" : "per_sesong",
+      prisversjon: PRISER.versjon,
+      eksempelpriser: PRISER.eksempelpriser
+    },
+    oppfolging: { ringt_tilbake: false, notater: [] }
+  };
+}
+
+$("skjema").addEventListener("submit", e => {
+  e.preventDefault();
+  const krav = ["navn", "telefon", "adresse"];
+  let ok = true;
+  krav.forEach(id => {
+    const el = $(id), tom = !el.value.trim() || (id === "telefon" && el.value.replace(/\D/g, "").length < 8);
+    el.classList.toggle("invalid", tom);
+    if (tom) ok = false;
+  });
+  $("feil").hidden = ok;
+  if (!ok) return;
+  const f = lagForesporsel();
+  // Prototype: lagres bare i denne nettleseren. På ekte nettside sendes dette til en server.
+  try {
+    const liste = JSON.parse(localStorage.getItem("foresporsler") || "[]");
+    liste.push(f);
+    localStorage.setItem("foresporsler", JSON.stringify(liste));
+  } catch (_) {}
+  $("takk-tlf").textContent = $("telefon").value.trim();
+  $("json-ut").textContent = JSON.stringify(f, null, 2);
+  $("skjema-felt").hidden = true;
+  $("takk").hidden = false;
+});
+$("ny").addEventListener("click", () => {
+  $("skjema").reset();
+  $("dato-felt").hidden = true;
+  $("takk").hidden = true;
+  $("skjema-felt").hidden = false;
+});
+["navn", "telefon", "adresse"].forEach(id => $(id).addEventListener("input", e => e.target.classList.remove("invalid")));
+
+oppdater();
+</script>
+
+</body>
+</html>
