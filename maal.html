@@ -189,9 +189,9 @@ let tegner = null;    // { punkter: [], markorer: [], linje }
 
 if (window.L) {
   kart = L.map("kart", { zoomControl: true, maxZoom: 20 }).setView([59.28, 11.11], 11); // Østfold
-  // Flyfoto fra Esri (god dekning i Østfold). Bilder finnes til zoom 19, nivå 20 forstørres.
+  // Flyfoto fra Esri (god dekning i Østfold). Esri mangler bilder på nivå 19 enkelte steder i Østfold, så nivå 18 forstørres.
   const flyfoto = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-    maxZoom: 20, maxNativeZoom: 19, attribution: "Flyfoto © Esri, Maxar, Earthstar Geographics"
+    maxZoom: 20, maxNativeZoom: 18, attribution: "Flyfoto © Esri, Maxar, Earthstar Geographics"
   });
   const topo = L.tileLayer("https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/{z}/{y}/{x}.png", {
     maxZoom: 20, maxNativeZoom: 18, attribution: "Kart © Kartverket"
