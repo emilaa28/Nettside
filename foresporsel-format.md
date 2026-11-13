@@ -20,6 +20,7 @@ Hver forespørsel fra nettsiden lagres som ett JSON-objekt med dette formatet. K
     "stroing": false,
     "omrader": [{ "type": "Innkjørsel", "m2": 48, "kilde": "kart" }, { "type": "Terrasse", "m2": 12, "kilde": "kart" }],
     "naar": { "valg": "snarest", "dato": null },
+    "ferdig_innen": "06:45",
     "melding": "Bratt innkjørsel"
   },
   "prisoverslag": {
@@ -42,6 +43,7 @@ Hver forespørsel fra nettsiden lagres som ett JSON-objekt med dette formatet. K
 | `kunde.type` | `privat`, `borettslag` | Skille kundegrupper |
 | `oppdrag.type` | `enkeltoppdrag`, `sesongavtale` | Pris og snøvarsling (sesongkunder varsles) |
 | `oppdrag.naar.valg` | `snarest`, `i_dag`, `i_morgen`, `dato`, `neste_snofall` | Planlegging |
+| `oppdrag.ferdig_innen` | `"HH:MM"` eller `null` | Når kunden drar på jobb. Morgenruta sorteres etter dette |
 | `oppdrag.stroing` | `true`, `false` | Om kunden vil ha strøing |
 | `oppdrag.omrader` | liste eller `null` | Hva kunden målte på kartsiden (maal.html), per område |
 | `prisoverslag.prisversjon` | fritekst | Vite hvilken prisliste kunden så |

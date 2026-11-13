@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <title>Østfold Måk og Salt</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Snømåking av innkjørsel og vei til døra i Østfold. Rask utrykning, enkeltoppdrag og sesongavtaler.">
+<meta name="description" content="Snømåking av innkjørsel og vei til døra i Grålum, Yven og Lande. Rask utrykning, enkeltoppdrag og sesongavtaler.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,600;112,800;125,900&family=Source+Sans+3:wght@400;600;700&display=swap">
@@ -189,11 +189,11 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
   <section class="hero">
     <div class="wrap">
       <div class="hero-text">
-        <p class="eyebrow">Snømåking i Østfold</p>
+        <p class="eyebrow">Snømåking i Grålum, Yven og Lande</p>
         <h1>Snøen kom. Vi kommer også.</h1>
         <p class="lead">Vi måker innkjørselen og veien helt fram til døra. Ta kontakt, så rykker vi ut så fort vi kan.</p>
         <ul class="facts">
-          <li>Rask utrykning</li>
+          <li>Ferdig før du drar på jobb</li>
           <li>Enkeltoppdrag eller fast avtale</li>
           <li>Pris før vi starter</li>
         </ul>
@@ -347,6 +347,17 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
             </div>
           </div>
           <div class="field">
+            <label class="addon" for="ferdig-paa">
+              <input type="checkbox" id="ferdig-paa">
+              <span><strong>Innkjørselen må være måket før jeg drar på jobb</strong><small>Vi planlegger morgenen etter hvem som drar først.</small></span>
+            </label>
+            <div class="field" id="ferdig-felt" hidden>
+              <label for="ferdig-kl">Jeg drar hjemmefra kl.</label>
+              <input type="time" id="ferdig-kl" name="ferdig-kl" value="07:00" min="05:00" max="10:00" step="900">
+              <span class="hint">Vi starter ca. kl. 04 på snømorgener.</span>
+            </div>
+          </div>
+          <div class="field">
             <span class="legend">Ditt prisoverslag</span>
             <p class="summary-chip num" id="oppsummering">Enkeltoppdrag, 60 m², ca. 660 kr</p>
             <span class="hint">Endre areal og type i kalkulatoren øverst.</span>
@@ -399,13 +410,13 @@ const PRISER = {
   versjon: "modell-2026-11-13",    // endre når tallene endres, lagres med hver forespørsel
   eksempelpriser: true,            // sett til false når du er fornøyd med prisene
 
-  personer: 2,                     // hvor mange som er med på hver jobb
+  personer: 1,                     // hvor mange som er med på hver jobb (1 og 1 i Grålum/Yven/Lande)
   timelonnPerPerson: 400,          // kr per time hver av dere skal sitte igjen med
   kostnadPaslag: 0.30,             // drivstoff, utstyr, slitasje, forsikring (30 %)
   mva: 0.25,                       // sett til 0 hvis firmaet ikke er mva-registrert
 
   minutterPerBesok: 15,            // kjøring, rigging og pakking per oppdrag
-  m2PerMinutt: 4,                  // hvor fort dere måker sammen (m² per minutt)
+  m2PerMinutt: 2,                  // hvor fort én person måker (m² per minutt)
 
   enkeltoppdrag: { paslag: 0.25, minstepris: 500 },   // påslag for rask utrykning uten avtale
   sesongavtale: {
@@ -492,6 +503,7 @@ document.querySelectorAll("[data-telefon-lenke]").forEach(el => el.href = "tel:"
 
 /* ---------- Skjema ---------- */
 $("naar").addEventListener("change", e => { $("dato-felt").hidden = e.target.value !== "dato"; });
+$("ferdig-paa").addEventListener("change", e => { $("ferdig-felt").hidden = !e.target.checked; });
 $("coop-cta").addEventListener("click", () => { $("k-borettslag").checked = true; });
 
 /* Felles format for en forespørsel. Brukes senere av kundesvar-agenten,
@@ -515,6 +527,7 @@ function lagForesporsel() {
       stroing: $("stroing").checked,
       omrader: maalteOmrader,
       naar: { valg: naar, dato: naar === "dato" ? ($("dato").value || null) : null },
+      ferdig_innen: $("ferdig-paa").checked ? ($("ferdig-kl").value || null) : null,
       melding: $("melding").value.trim() || null
     },
     prisoverslag: {
@@ -554,6 +567,7 @@ $("skjema").addEventListener("submit", e => {
 $("ny").addEventListener("click", () => {
   $("skjema").reset();
   $("dato-felt").hidden = true;
+  $("ferdig-felt").hidden = true;
   $("takk").hidden = true;
   $("skjema-felt").hidden = false;
 });
