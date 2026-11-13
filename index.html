@@ -98,7 +98,13 @@ header.top .wrap { display: flex; align-items: center; justify-content: space-be
 
 /* Priskalkulator */
 .calc { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 24px; display: grid; gap: 20px; box-shadow: 0 12px 32px -18px rgba(20,33,46,.35); min-width: 0; }
-.calc-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.calc { padding: 0; gap: 0; overflow: hidden; }
+.calc-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 18px 22px; background: var(--card); color: var(--ink); border: 0; cursor: pointer; font-family: var(--display); font-weight: 800; font-stretch: 112%; font-size: 1.35rem; text-align: left; }
+.calc-toggle:hover { background: var(--ice); }
+.chev { width: 14px; height: 14px; border-right: 3px solid var(--signal); border-bottom: 3px solid var(--signal); transform: rotate(45deg); margin-top: -6px; flex: none; }
+.calc-toggle[aria-expanded="true"] .chev { transform: rotate(-135deg); margin-top: 6px; }
+.calc-body { display: grid; gap: 20px; padding: 4px 22px 22px; }
+.calc-body .tag { justify-self: start; }
 .tag { font-size: .78rem; font-weight: 700; letter-spacing: .04em; padding: 3px 9px; border-radius: 999px; background: var(--signal-soft); color: var(--ink); }
 .seg { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 5px; background: var(--ice); border-radius: var(--radius); }
 .seg input { position: absolute; opacity: 0; pointer-events: none; }
@@ -169,7 +175,9 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
 }
 @media (max-width: 460px) {
   .two { grid-template-columns: 1fr; }
-  .calc, form.card { padding: 18px; }
+  form.card { padding: 18px; }
+  .calc-toggle { padding: 16px 18px; }
+  .calc-body { padding: 4px 18px 18px; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .price-big .val { transition: color .2s; }
@@ -208,10 +216,12 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
       </div>
 
       <div class="calc" id="pris" aria-labelledby="calc-title">
-        <div class="calc-head">
-          <h3 id="calc-title">Regn ut prisen</h3>
+        <button class="calc-toggle" type="button" id="calc-toggle" aria-expanded="false" aria-controls="calc-body">
+          <span id="calc-title">Regn ut prisen</span>
+          <span class="chev" aria-hidden="true"></span>
+        </button>
+        <div class="calc-body" id="calc-body" hidden>
           <span class="tag" id="price-tag">Foreløpige priser</span>
-        </div>
 
         <div class="seg" role="radiogroup" aria-label="Type oppdrag">
           <input type="radio" name="type" id="t-enkelt" value="enkeltoppdrag" checked>
@@ -244,6 +254,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
         </div>
 
         <a class="btn btn-signal" href="#bestill" id="calc-cta">Bestill med denne prisen</a>
+        </div>
       </div>
     </div>
   </section>
@@ -503,6 +514,13 @@ document.querySelectorAll("[data-telefon-lenke]").forEach(el => el.href = "tel:"
 
 /* ---------- Skjema ---------- */
 $("naar").addEventListener("change", e => { $("dato-felt").hidden = e.target.value !== "dato"; });
+/* Kalkulatoren er lukket til man trykker på den */
+function apneKalkulator(apen) {
+  $("calc-body").hidden = !apen;
+  $("calc-toggle").setAttribute("aria-expanded", String(apen));
+}
+$("calc-toggle").addEventListener("click", () => apneKalkulator($("calc-body").hidden));
+if (location.hash === "#pris" || new URLSearchParams(location.search).get("areal")) apneKalkulator(true);
 $("ferdig-paa").addEventListener("change", e => { $("ferdig-felt").hidden = !e.target.checked; });
 $("coop-cta").addEventListener("click", () => { $("k-borettslag").checked = true; });
 
