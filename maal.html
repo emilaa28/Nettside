@@ -65,6 +65,7 @@ header.top .wrap { display: flex; align-items: center; justify-content: space-be
 .hint-bar { background: var(--ink); color: var(--snow); padding: 8px 12px; font-size: .95rem; font-weight: 600; text-align: center; }
 
 aside.panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 16px; min-width: 0; }
+.callout { background: var(--signal-soft); padding: 12px 14px; border-radius: 8px; }
 .areas { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .areas li { display: grid; grid-template-columns: 14px 1fr auto auto; gap: 10px; align-items: center; padding: 10px 12px; background: var(--snow); border-radius: 8px; }
 .swatch { width: 14px; height: 14px; border-radius: 3px; }
@@ -133,6 +134,7 @@ details.manual summary { cursor: pointer; font-weight: 600; }
     </div>
 
     <aside class="panel" aria-labelledby="panel-tittel">
+      <p class="callout">Synes du dette er knotete? <strong>Ring oss på <span class="num" data-telefon>000 00 000</span></strong>, så finner vi ut av det sammen.</p>
       <h2 id="panel-tittel">Dine områder</h2>
       <ul class="areas" id="liste"></ul>
       <p class="empty" id="tom">Ingen områder ennå. Velg type, trykk «Tegn område» og trykk på hjørnene i flyfotoet.</p>
@@ -162,6 +164,8 @@ details.manual summary { cursor: pointer; font-weight: 600; }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 const FIRMANAVN = "Østfold Måk og Salt";
+const TELEFON = "000 00 000";
+document.querySelectorAll("[data-telefon]").forEach(el => el.textContent = TELEFON);
 document.querySelectorAll("[data-firmanavn]").forEach(el => el.textContent = FIRMANAVN);
 
 const FARGER = { "Innkjørsel": "#e8650f", "Gangvei til døra": "#2f80d1", "Terrasse": "#8a5cd6", "Trapp": "#1d9a6c", "Parkeringsplass": "#d1a12f", "Annet": "#7b8a99" };
@@ -184,21 +188,16 @@ const omrader = [];   // { id, type, m2, lag, kilde: "kart" | "manuelt" }
 let tegner = null;    // { punkter: [], markorer: [], linje }
 
 if (window.L) {
-  kart = L.map("kart", { zoomControl: true }).setView([59.28, 11.11], 11); // Østfold
-  // Flyfoto fra Kartverket (Norge i bilder). Faller tilbake til Esri hvis det ikke laster.
-  const nib = L.tileLayer.wms("https://wms.geonorge.no/skwms1/wms.nib", {
-    layers: "ortofoto", format: "image/jpeg", maxZoom: 21, attribution: "Flyfoto © Norge i bilder / Kartverket"
-  });
-  const esri = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-    maxZoom: 20, maxNativeZoom: 19, attribution: "Flyfoto © Esri"
+  kart = L.map("kart", { zoomControl: true, maxZoom: 20 }).setView([59.28, 11.11], 11); // Østfold
+  // Flyfoto fra Esri (god dekning i Østfold). Bilder finnes til zoom 19, nivå 20 forstørres.
+  const flyfoto = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+    maxZoom: 20, maxNativeZoom: 19, attribution: "Flyfoto © Esri, Maxar, Earthstar Geographics"
   });
   const topo = L.tileLayer("https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/{z}/{y}/{x}.png", {
     maxZoom: 20, maxNativeZoom: 18, attribution: "Kart © Kartverket"
   });
-  nib.addTo(kart);
-  let feil = 0;
-  nib.on("tileerror", () => { if (++feil === 4 && kart.hasLayer(nib)) { kart.removeLayer(nib); esri.addTo(kart); } });
-  L.control.layers({ "Flyfoto (Kartverket)": nib, "Flyfoto (Esri)": esri, "Kart": topo }, null, { position: "topright" }).addTo(kart);
+  flyfoto.addTo(kart);
+  L.control.layers({ "Flyfoto": flyfoto, "Kart": topo }, null, { position: "topright" }).addTo(kart);
   kart.on("click", e => { if (tegner) leggTilPunkt(e.latlng); });
 } else {
   $("kart").innerHTML = '<p style="padding:20px">Kartet kunne ikke lastes. Bruk «Skriv inn mål» til høyre.</p>';
@@ -223,7 +222,7 @@ function velgAdresse(a) {
   $("sok").value = a.tekst;
   $("sok-melding").textContent = "";
   try { localStorage.setItem("maal_adresse", a.tekst); } catch (_) {}
-  if (kart) { kart.setView([a.lat, a.lon], 20); hint("Velg type område og trykk «Tegn område»"); }
+  if (kart) { kart.setView([a.lat, a.lon], 19); hint("Velg type område og trykk «Tegn område»"); }
 }
 $("sok-skjema").addEventListener("submit", async e => {
   e.preventDefault();
